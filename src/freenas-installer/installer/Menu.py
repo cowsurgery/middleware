@@ -576,7 +576,7 @@ Do you want to upgrade?""".format(Project(), Project())
                          text,
                          height=height, width=60,
                          yes_label="Continue",
-                         no_label="Cancel",
+                         no_label="Abort",
                          default=False)
     if yesno.result == False:
         LogIt("Installation aborted at first confirmation")
