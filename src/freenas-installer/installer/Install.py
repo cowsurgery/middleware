@@ -67,8 +67,8 @@ def InstallGrub(chroot, disks, bename, efi=False):
     else:
         cleanit = None
 
-    os.environ["GRUB_TERMINAL_OUTPUT"] = "console serial"
     if efi:
+        os.environ["GRUB_TERMINAL_OUTPUT"] = "gfxterm"
         with open("{}/conf/base/etc/local/default/grub".format(chroot), "r") as f:
             lines = [x.rstrip() for x in f]
         with open("{}/conf/base/etc/local/default/grub".format(chroot), "w") as f:
@@ -79,7 +79,9 @@ def InstallGrub(chroot, disks, bename, efi=False):
                     line = line.replace("GRUB_TERMINAL_OUTPUT=console", "GRUB_TERMINAL_OUTPUT=gfxterm")
                     LogIt("\t\t-> {}".format(line))
                 print(line, file=f)
-        
+    else:
+        os.environ["GRUB_TERMINAL_OUTPUT"] = "console serial"
+
     for disk_name in disks:
         LogIt("InstallGrub:  disk={}".format(disk_name))
         disk = Utils.Disk(disk_name)
@@ -93,7 +95,7 @@ def InstallGrub(chroot, disks, bename, efi=False):
                 RunCommand("/sbin/glabel", "label", "efibsd", "/dev/{}p1".format(disk.name))
             except RunCommandException as e:
                 LogIt("glabel got {}".format(str(e)))
-                
+
             try:
                 os.makedirs("{}/boot/efi".format(chroot), 0o755)
             except:
@@ -107,6 +109,7 @@ def InstallGrub(chroot, disks, bename, efi=False):
                        "--efi-directory=/boot/efi",
                        "--removable",
                        "--target=x86_64-efi",
+                       "--modules=zfs part_gpt efi_gop efi_uga video video_fb",
                        "/dev/{}".format(disk.name),
                        chroot=chroot)
             LogIt("Attempting to unmount {}/boot/efi".format(chroot))
