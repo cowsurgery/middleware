@@ -545,11 +545,11 @@ Do you want to upgrade?""".format(Project(), Project())
             shutil.rmtree(cache_dir, ignore_errors=True)
         raise
     LogIt("Done getting packages?")
-    # Let's confirm everything
+    # Confirm installation — single confirmation dialog with full details
     text = "The {} Installer will perform the following actions:\n\n".format(Project())
     height = 10
     if format_disks:
-        text += "* The following disks will be reformatted, and all data lost:\n"
+        text += "* The following disks will be reformatted, and ALL DATA LOST:\n"
         height += 1
         for disk in disks:
             text += "\t* {} {} ({}bytes)\n".format(disk.name,
@@ -559,40 +559,29 @@ Do you want to upgrade?""".format(Project(), Project())
         if found_bootpool:
             text += "* The existing boot pool will be destroyed\n"
             height += 1
-        text += "* {} Booting\n".format("BIOS" if boot_method is "bios" else "(U)EFI")
+        text += "* {} Booting\n".format("BIOS" if boot_method == "bios" else "(U)EFI")
     else:
         text += "* A new Boot Environment will be created\n"
         height += 1
-        
+
     if do_upgrade:
         text += "* {} will be upgraded\n".format(Project())
     else:
         text += "* {} will be freshly installed\n".format(Project())
     height += 1
-    
-    yesno.prompt = text
-    yesno.default = False
+
+    text += "\nSelect Start Over or hit Escape to abort!"
+    height += 2
+
     yesno = Dialog.YesNo("{} Installation Confirmation".format(Project()),
                          text,
                          height=height, width=60,
                          yes_label="Continue",
-                         no_label="Abort",
+                         no_label="Start Over",
                          default=False)
-    if yesno.result == False:
-        LogIt("Installation aborted at first confirmation")
+    if yesno.result is False:
+        LogIt("Installation aborted at confirmation")
         raise Dialog.DialogEscape
-    
-    if format_disks:
-        yesno = Dialog.YesNo("LAST CHANCE",
-                             "The {} installer will format the selected disks and all data on them will be erased.\n\nSelect Start Over or hit Escape to start over!".format(Project()),
-                             height=10,
-                             width=50,
-                             yes_label="Continue",
-                             no_label="Start Over",
-                             default=False)
-        if yesno.result is False:
-            LogIt("Installation aborted at second confirmation")
-            raise Dialog.DialogEscape
         
     # This may take a while, it turns out
     try:
